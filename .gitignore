@@ -225,3 +225,4 @@ fabric.properties
 
 
 app/google-services.json
+app/src/main/res/values/secret.xml

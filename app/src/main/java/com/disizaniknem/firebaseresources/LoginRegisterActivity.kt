@@ -1,10 +1,12 @@
 package com.disizaniknem.firebaseresources
 
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.android.synthetic.main.activity_main.*
+import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.android.synthetic.main.activity_login_register.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,16 +14,14 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 
-class MainActivity : AppCompatActivity() {
+class LoginRegisterActivity : AppCompatActivity() {
 
     lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_login_register)
         auth = FirebaseAuth.getInstance()
-
-        auth.signOut()
 
         btnRegister.setOnClickListener {
             registerUser()
@@ -29,6 +29,35 @@ class MainActivity : AppCompatActivity() {
 
         btnLogin.setOnClickListener {
             loginUser()
+        }
+
+        btnUpdateProfile.setOnClickListener {
+            updateProfile()
+        }
+    }
+
+    private fun updateProfile() {
+        auth.currentUser?.let { user ->
+            val username = etUsername.text.toString()
+            val photoURI = Uri.parse("android.resource://$packageName/${R.drawable.ic_android_black}")
+            val profileUpdates = UserProfileChangeRequest.Builder()
+                .setDisplayName(username)
+                .setPhotoUri(photoURI)
+                .build()
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    user.updateProfile(profileUpdates).await()
+                    checkLoggedInState()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@LoginRegisterActivity, "Successfully updated", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@LoginRegisterActivity, e.message, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
     }
 
@@ -49,7 +78,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 } catch (e:Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@LoginRegisterActivity, e.message, Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -68,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 } catch (e:Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@LoginRegisterActivity, e.message, Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -76,10 +105,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkLoggedInState() {
-        if (auth.currentUser == null) {
+        val user = auth.currentUser
+        if (user == null) {
             tvLoggedIn.text = "You re not logged in"
         } else {
             tvLoggedIn.text = "You re logged in"
+            etUsername.setText(user.displayName)
+            ivProfilePicture.setImageURI(user.photoUrl)
         }
     }
 }
