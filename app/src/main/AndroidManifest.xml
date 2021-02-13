@@ -9,15 +9,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FirebaseResources">
-        <activity android:name=".SignInWithGoogleActivity">
+        <activity android:name=".FirebaseFirestoreActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginRegisterActivity">
+        <activity android:name=".SignInWithGoogleActivity">
+
         </activity>
+        <activity android:name=".LoginRegisterActivity"></activity>
     </application>
 
 </manifest>
