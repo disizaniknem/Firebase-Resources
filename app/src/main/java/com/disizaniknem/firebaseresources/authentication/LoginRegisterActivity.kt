@@ -1,9 +1,10 @@
-package com.disizaniknem.firebaseresources
+package com.disizaniknem.firebaseresources.authentication
 
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.disizaniknem.firebaseresources.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.android.synthetic.main.activity_login_register.*

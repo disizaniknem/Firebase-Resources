@@ -1,9 +1,10 @@
-package com.disizaniknem.firebaseresources
+package com.disizaniknem.firebaseresources.authentication
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import com.disizaniknem.firebaseresources.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -35,7 +36,9 @@ class SignInWithGoogleActivity : AppCompatActivity() {
 
             val signInClient = GoogleSignIn.getClient(this, options)
             signInClient.signInIntent.also {
-                startActivityForResult(it, REQUEST_CODE_SIGN_IN)
+                startActivityForResult(it,
+                    REQUEST_CODE_SIGN_IN
+                )
             }
         }
 
