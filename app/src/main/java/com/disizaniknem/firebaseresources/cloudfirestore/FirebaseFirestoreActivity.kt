@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import com.disizaniknem.firebaseresources.R
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -41,6 +42,11 @@ class FirebaseFirestoreActivity : AppCompatActivity() {
             updatePerson(oldPerson, newPersonMap)
         }
 
+        btnDeletePerson.setOnClickListener {
+            val person = getOldPerson()
+            deletePerson(person)
+        }
+
         //subscribeToRealTimeUpdate()
     }
 
@@ -67,6 +73,34 @@ class FirebaseFirestoreActivity : AppCompatActivity() {
             map["age"] = age.toInt()
         }
         return map;
+    }
+
+    private fun deletePerson(person: Person) = CoroutineScope(Dispatchers.IO).launch {
+        val personQuery = personCollectionRef
+                .whereEqualTo("firstName", person.firstName)
+                .whereEqualTo("lastName", person.lastName)
+                .whereEqualTo("age", person.age)
+                .get()
+                .await()
+
+        if (personQuery.documents.isNotEmpty()) {
+            for(document in personQuery) {
+                try {
+                    personCollectionRef.document(document.id).delete().await()
+                    /*personCollectionRef.document(document.id).update(mapOf(
+                            "firstName" to FieldValue.delete()
+                    ))*/
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@FirebaseFirestoreActivity, "No person match the query", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        } else {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@FirebaseFirestoreActivity, "No person match the query", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun updatePerson(person: Person, newPersonMap: Map<String, Any>) = CoroutineScope(Dispatchers.IO).launch {
