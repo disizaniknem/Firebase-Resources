@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import com.disizaniknem.firebaseresources.R
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -30,11 +31,70 @@ class FirebaseFirestoreActivity : AppCompatActivity() {
             savePerson(person)
         }
 
-        /*btnRetrieveData.setOnClickListener {
+        btnRetrieveData.setOnClickListener {
             retrievePerson()
-        }*/
+        }
 
-        subscribeToRealTimeUpdate()
+        btnUpdatePerson.setOnClickListener {
+            val oldPerson = getOldPerson()
+            val newPersonMap = getNewPersonMap()
+            updatePerson(oldPerson, newPersonMap)
+        }
+
+        //subscribeToRealTimeUpdate()
+    }
+
+    private fun getOldPerson() : Person {
+        val firstName = etFirstName.text.toString()
+        val lastName = etLastName.text.toString()
+        val age = etAge.text.toString().toInt()
+        return Person(firstName, lastName, age)
+    }
+
+    private fun getNewPersonMap(): Map<String, Any> {
+        val firstName = etNewFirstName.text.toString()
+        val lastName = etNewLastName.text.toString()
+        val age = etNewAge.text.toString()
+        val map = mutableMapOf<String, Any>()
+        if (firstName.isNotEmpty()) {
+            map["firstName"] = firstName
+        }
+
+        if (lastName.isNotEmpty()) {
+            map["lastName"] = lastName
+        }
+        if (age.isNotEmpty()) {
+            map["age"] = age.toInt()
+        }
+        return map;
+    }
+
+    private fun updatePerson(person: Person, newPersonMap: Map<String, Any>) = CoroutineScope(Dispatchers.IO).launch {
+        val personQuery = personCollectionRef
+                .whereEqualTo("firstName", person.firstName)
+                .whereEqualTo("lastName", person.lastName)
+                .whereEqualTo("age", person.age)
+                .get()
+                .await()
+
+        if (personQuery.documents.isNotEmpty()) {
+            for(document in personQuery) {
+                try {
+                    personCollectionRef.document(document.id).set(
+                            newPersonMap,
+                            SetOptions.merge()
+                    ).await()
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@FirebaseFirestoreActivity, "No person match the query", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        } else {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@FirebaseFirestoreActivity, "No person match the query", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun subscribeToRealTimeUpdate() {
@@ -55,8 +115,17 @@ class FirebaseFirestoreActivity : AppCompatActivity() {
     }
 
     private fun retrievePerson() = CoroutineScope(Dispatchers.IO).launch {
+
+        val fromAge = etFrom.text.toString().toInt()
+        val toAge = etTo.text.toString().toInt()
+
         try {
-            val querySnapshot = personCollectionRef.get().await()
+            val querySnapshot = personCollectionRef
+                    .whereGreaterThan("age", fromAge)
+                    .whereLessThan("age", toAge)
+                    .orderBy("age")
+                    .get()
+                    .await()
             val sb = StringBuilder()
             for (document in querySnapshot.documents) {
                 val person = document.toObject<Person>()
