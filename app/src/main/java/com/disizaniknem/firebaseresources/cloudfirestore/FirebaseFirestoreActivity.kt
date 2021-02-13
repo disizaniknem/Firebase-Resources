@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Toast
 import com.disizaniknem.firebaseresources.R
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.activity_firebase_firestore.*
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,28 @@ class FirebaseFirestoreActivity : AppCompatActivity() {
             val age = etAge.text.toString().toInt()
             val person = Person(firstName, lastName, age)
             savePerson(person)
+        }
+
+        btnRetrieveData.setOnClickListener {
+            retrievePerson()
+        }
+    }
+
+    private fun retrievePerson() = CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val querySnapshot = personCollectionRef.get().await()
+            val sb = StringBuilder()
+            for (document in querySnapshot.documents) {
+                val person = document.toObject<Person>()
+                sb.append("$person\n")
+            }
+            withContext(Dispatchers.Main) {
+                tvPersons.text = sb.toString()
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@FirebaseFirestoreActivity, e.message, Toast.LENGTH_LONG).show()
+            }
         }
     }
 
